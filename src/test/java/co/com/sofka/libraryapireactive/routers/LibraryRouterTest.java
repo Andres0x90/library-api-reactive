@@ -5,16 +5,13 @@ import co.com.sofka.libraryapireactive.configurations.ApiRestConfig;
 import co.com.sofka.libraryapireactive.dtos.ResourceDTO;
 import co.com.sofka.libraryapireactive.mappers.ResourceMapper;
 import co.com.sofka.libraryapireactive.repositories.ResourceRepository;
-import co.com.sofka.libraryapireactive.services.LibraryService;
 import co.com.sofka.libraryapireactive.usecases.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -22,11 +19,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ContextConfiguration(classes = {LibraryRouter.class, CheckAvailabilityUseCase.class,
         LendUseCase.class, GiveBackUseCase.class, FilterByTypeUseCase.class, FilterBySubjectAreaUseCase.class
 , FilterByTypeAndSubjectAreaUseCase.class, CreateUseCase.class, FindByIdUseCase.class, ListUseCase.class,
-UpdateUseCase.class, DeleteUseCase.class, LibraryService.class, ResourceRepository.class, ResourceMapper.class,
+UpdateUseCase.class, DeleteUseCase.class, ResourceRepository.class, ResourceMapper.class,
          ApiRestConfig.class})
 class LibraryRouterTest {
 
@@ -118,6 +113,7 @@ class LibraryRouterTest {
 
     @Test
     void findById() {
+
     }
 
     @Test
