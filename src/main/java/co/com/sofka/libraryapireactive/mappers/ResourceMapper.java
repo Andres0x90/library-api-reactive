@@ -40,8 +40,4 @@ public class ResourceMapper {
         return resource;
     }
 
-    public List<ResourceDTO> fromEntityList(List<Resource> resources)
-    {
-        return resources.stream().map(resource -> fromEntity(resource)).toList();
-    }
 }

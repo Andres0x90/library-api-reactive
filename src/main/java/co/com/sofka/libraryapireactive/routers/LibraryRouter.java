@@ -47,6 +47,40 @@ public class LibraryRouter {
                                 ), String.class)));
     }
     @Bean
+    public RouterFunction<ServerResponse> filterByType(FilterByTypeUseCase
+                                                           filterByTypeUseCase)
+    {
+        return route(GET("/resources/filter-by-type/{type}").and(accept(MediaType.APPLICATION_JSON)),
+                request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(
+                                filterByTypeUseCase.apply(request.pathVariable("type")
+                                ), ResourceDTO.class)));
+    }
+    @Bean
+    public RouterFunction<ServerResponse> filterBySubjectArea(FilterBySubjectAreaUseCase
+                                                               filterBySubjectAreaUseCase)
+    {
+        return route(GET("/resources/filter-by-subject-area/{subjectArea}")
+                        .and(accept(MediaType.APPLICATION_JSON)),
+                request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(
+                                filterBySubjectAreaUseCase.apply(request.pathVariable("subjectArea")
+                                ), ResourceDTO.class)));
+    }
+    @Bean
+    public RouterFunction<ServerResponse> filterByTypeAndSubjectArea
+            (FilterByTypeAndSubjectAreaUseCase filterByTypeAndSubjectAreaUseCase)
+    {
+        return route(GET("/resources/filter-by-type-and-subject-area")
+                        .and(accept(MediaType.APPLICATION_JSON)),
+                request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(
+                                filterByTypeAndSubjectAreaUseCase.apply(
+                                        request.queryParam("type").get(),
+                                        request.queryParam("subjectArea").get()
+                                ), ResourceDTO.class)));
+    }
+    @Bean
     public RouterFunction<ServerResponse> create(CreateUseCase
                                                        createUseCase)
     {

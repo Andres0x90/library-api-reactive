@@ -105,6 +105,19 @@ public class LibraryService {
                     return response;
                 });
     }
+    public Flux<ResourceDTO> filterByType(String type)
+    {
+        return resourceRepository.findByType(type).map(resourceMapper::fromEntity);
+    }
+    public Flux<ResourceDTO> filterBySubjectArea(String subjectArea)
+    {
+        return resourceRepository.findBySubjectArea(subjectArea).map(resourceMapper::fromEntity);
+    }
+    public Flux<ResourceDTO> filterByTypeAndSubjectArea(String type, String subjectArea)
+    {
+        return resourceRepository.findByTypeAndSubjectArea(type, subjectArea)
+                .map(resourceMapper::fromEntity);
+    }
     private Mono<Map<String, String>> resourceGivenBackFailureResponse(Resource resource)
     {
         return Mono.just(new HashMap<String, String>())
