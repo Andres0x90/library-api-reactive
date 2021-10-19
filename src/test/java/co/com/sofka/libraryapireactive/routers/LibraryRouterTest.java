@@ -113,7 +113,19 @@ class LibraryRouterTest {
 
     @Test
     void findById() {
+        var data =  getResourceData();
+        Mockito.when(resourceRepository.findById(data.getId())).thenReturn(Mono.just(data));
 
+        webTestClient.get().uri("/resources/list/xxxx")
+                .exchange()
+                .expectBody(ResourceDTO.class)
+                .value(resourceDTO ->
+                {
+                    assertEquals(data.getTitle(),resourceDTO.getTitle());
+                    assertEquals(data.getType(),resourceDTO.getType());
+                    assertEquals(data.getSubjectArea(),resourceDTO.getSubjectArea());
+
+                });
     }
 
     @Test
