@@ -6,6 +6,7 @@ import co.com.sofka.libraryapireactive.dtos.ResourceDTO;
 import co.com.sofka.libraryapireactive.mappers.ResourceMapper;
 import co.com.sofka.libraryapireactive.repositories.ResourceRepository;
 import co.com.sofka.libraryapireactive.usecases.*;
+import net.minidev.json.JSONValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,26 +47,127 @@ class LibraryRouterTest {
 
     @Test
     void checkAvailability() {
+        var data =  getResourceData();
+        data.lend();
+        Mockito.when(resourceRepository.findById("xxxx")).thenReturn(Mono.just(data));
+
+        webTestClient.get().uri("/resources/check-availability/xxxx")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(stringResponse ->
+                {
+                    Map<String, String> response = (Map<String, String>) JSONValue.parse(stringResponse);
+                    assertEquals("Este recurso no se encuentra disponible para prestar",
+                            response.get("message"));
+                });
     }
 
     @Test
     void lend() {
+        var data =  getResourceData();
+        Mockito.when(resourceRepository.findById("xxxx")).thenReturn(Mono.just(data));
+        var dataLent = getResourceData();
+        dataLent.lend();
+        Mockito.when(resourceRepository.save(Mockito.any())).thenReturn(Mono.just(dataLent));
+
+        webTestClient.put().uri("/resources/lend/xxxx")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(stringResponse ->
+                {
+                    Map<String, Object> response = (Map<String, Object>) JSONValue.parse(stringResponse);
+                    assertEquals("Recurso prestado exitosamente",
+                            response.get("message"));
+
+                    var resourceDTO = (Map) response.get("resource");
+                    assertNotNull(resourceDTO.get("dateLent"));
+                });
     }
 
     @Test
     void giveBack() {
+        var data =  getResourceData();
+        data.lend();
+        Mockito.when(resourceRepository.findById("xxxx")).thenReturn(Mono.just(data));
+        var dataLent = getResourceData();
+        dataLent.giveBack();
+        Mockito.when(resourceRepository.save(Mockito.any())).thenReturn(Mono.just(dataLent));
+
+        webTestClient.put().uri("/resources/give-back/xxxx")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(stringResponse ->
+                {
+                    Map<String, String> response = (Map<String, String>) JSONValue.parse(stringResponse);
+                    assertEquals("Recurso devuelto exitosamente",
+                            response.get("message"));
+                });
     }
 
     @Test
     void filterByType() {
+        var data =  getResourceListData();
+        Mockito.when(resourceRepository.findByType("book")).thenReturn(Flux.just(data.get(0), data.get(1)));
+
+        webTestClient.get().uri("/resources/filter-by-type/book")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ResourceDTO.class)
+                .value(resourcesDTO ->
+                {
+                    assertEquals(data.get(0).getTitle(),resourcesDTO.get(0).getTitle());
+                    assertEquals(data.get(0).getType(),resourcesDTO.get(0).getType());
+                    assertEquals(data.get(0).getSubjectArea(),resourcesDTO.get(0).getSubjectArea());
+
+                    assertEquals(data.get(1).getTitle(),resourcesDTO.get(1).getTitle());
+                    assertEquals(data.get(1).getType(),resourcesDTO.get(1).getType());
+                    assertEquals(data.get(1).getSubjectArea(),resourcesDTO.get(1).getSubjectArea());
+
+                });
     }
 
     @Test
     void filterBySubjectArea() {
+        var data =  getResourceListData();
+        Mockito.when(resourceRepository.findBySubjectArea("tech"))
+                .thenReturn(Flux.just(data.get(0), data.get(2)));
+
+        webTestClient.get().uri("/resources/filter-by-subject-area/tech")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ResourceDTO.class)
+                .value(resourcesDTO ->
+                {
+                    assertEquals(data.get(0).getTitle(),resourcesDTO.get(0).getTitle());
+                    assertEquals(data.get(0).getType(),resourcesDTO.get(0).getType());
+                    assertEquals(data.get(0).getSubjectArea(),resourcesDTO.get(0).getSubjectArea());
+
+                    assertEquals(data.get(2).getTitle(),resourcesDTO.get(1).getTitle());
+                    assertEquals(data.get(2).getType(),resourcesDTO.get(1).getType());
+                    assertEquals(data.get(2).getSubjectArea(),resourcesDTO.get(1).getSubjectArea());
+
+                });
     }
 
     @Test
     void filterByTypeAndSubjectArea() {
+        var data =  getResourceListData();
+        Mockito.when(resourceRepository.findByTypeAndSubjectArea("magazine", "tech"))
+                .thenReturn(Flux.just(data.get(2)));
+
+        webTestClient.get().uri("/resources/filter-by-type-and-subject-area?type=magazine&subjectArea=tech")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ResourceDTO.class)
+                .value(resourcesDTO ->
+                {
+                    assertEquals(data.get(2).getTitle(),resourcesDTO.get(0).getTitle());
+                    assertEquals(data.get(2).getType(),resourcesDTO.get(0).getType());
+                    assertEquals(data.get(2).getSubjectArea(),resourcesDTO.get(0).getSubjectArea());
+                });
     }
 
     @Test
@@ -130,10 +233,39 @@ class LibraryRouterTest {
 
     @Test
     void update() {
+        var data =  getResourceData();
+        Mockito.when(resourceRepository.findById("xxxx")).thenReturn(Mono.just(data));
+        data.setTitle("recurso1 cambiado");
+        Mockito.when(resourceRepository.save(Mockito.any())).thenReturn(Mono.just(data));
+
+        webTestClient.put().uri("/resources/update").accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(data), ResourceDTO.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ResourceDTO.class)
+                .value(resourceDTO ->
+                {
+                    assertEquals(data.getTitle(),resourceDTO.getTitle());
+                    assertEquals(data.getType(),resourceDTO.getType());
+                    assertEquals(data.getSubjectArea(),resourceDTO.getSubjectArea());
+                });
     }
 
     @Test
     void delete() {
+        var data =  getResourceData();
+        Mockito.when(resourceRepository.findById("xxxx")).thenReturn(Mono.just(data));
+        Mockito.when(resourceRepository.delete(Mockito.any())).thenReturn(Mono.empty());
+
+        webTestClient.delete().uri("/resources/delete/xxxx")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(stringResponse ->
+                {
+                    Map<String, String> response = (Map<String, String>) JSONValue.parse(stringResponse);
+                    assertEquals("Recurso eliminado correctamente", response.get("message"));
+                });
     }
 
     private Resource getResourceData()
